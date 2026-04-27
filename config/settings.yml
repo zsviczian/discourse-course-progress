@@ -1,0 +1,4 @@
+plugins:
+  course_progress_enabled:
+    default: true
+    client: true
