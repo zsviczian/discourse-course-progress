@@ -1,27 +1,31 @@
-# Discourse Course Progress
+# Discourse Course Progress Plugin
 
 A lightweight, server-side Discourse plugin designed to support LMS-style "course" progression. It exposes a single, highly-optimized API endpoint that returns the true historical read status of topics for the current user.
 
-## Why is this needed?
-By default, the Discourse notification engine (and `/unread.json`) relies on a time-decay algorithm to prevent notification fatigue. It actively hides or ignores topics created *before* a user's account was created, making client-side scripts unable to track historical reading progress for new members.
+🎨 **Looking for the UI?** To actually display the progress badges and checkmarks in your Discourse sidebar, you must also install the official companion Theme Component: **[Discourse Course Progress Theme Component](https://github.com/zsviczian/discourse-course-progress-theme)**
 
-This plugin bypasses the notification engine entirely. It queries the `TopicUser` database directly to find exactly which topics a user has historically opened, providing bulletproof data for custom UI theme components (like sidebar progress bars or Unread dots).
+## Why is this needed?
+By default, the standard Discourse notification engine relies on a time-decay algorithm to prevent notification fatigue. It actively hides or ignores topics created *before* a user's account was created, making standard client-side scripts unable to track historical reading progress for new members.
+
+This plugin bypasses the notification engine entirely. It queries the `TopicUser` database directly to find exactly which topics a user has historically opened, providing bulletproof data for custom UI theme components.
 
 ## Dependencies
-This plugin relies on the official **Discourse Docs** plugin. It specifically tracks progress for categories that have an "Index Topic" configured in their Docs settings.
+This plugin relies on the official **Discourse Docs** plugin. It automatically tracks progress for any category that has an "Index Topic" configured in its Docs settings.
 
 ## Installation
 
-1. Edit your `app.yml` file (`nano /var/discourse/containers/app.yml`).
-2. Add the clone URL for this repository to the `hooks` section:
+1. SSH into your Discourse server.
+2. Edit your `app.yml` file (e.g., `nano /var/discourse/containers/app.yml`).
+3. Add the clone URL for this repository to the `hooks` section, placing it below `docker_manager`:
 
 ```yaml
 hooks:
-	after_code:
-		- exec:
-				cd: $home/plugins
-				cmd:
-					- git clone git clone https://github.com/zsviczian/discourse-course-progress.git
+  after_code:
+    - exec:
+        cd: $home/plugins
+        cmd:
+          - git clone https://github.com/discourse/docker_manager.git
+          - git clone https://github.com/zsviczian/discourse-course-progress.git
 ```
 
 4. Rebuild the container:
@@ -31,7 +35,12 @@ cd /var/discourse
 ./launcher rebuild app
 ```
 
-## API Endpoint
+## Next Steps: Install the UI
+Once your server finishes rebuilding, this plugin will quietly serve the progression data in the background. To make it visible to your users, install the **[Discourse Course Progress Theme Component](https://github.com/zsviczian/discourse-course-progress-theme)** via your Discourse Admin interface (`Admin > Customize > Themes > Install > From a Git Repository`).
+
+---
+
+## For Developers: API Endpoint
 The plugin exposes one endpoint: `GET /course-progress.json`.
 *(Note: The user must be logged in to access this endpoint, as guests do not have read histories).*
 
@@ -39,35 +48,17 @@ The plugin exposes one endpoint: `GET /course-progress.json`.
 
 ```json
 {
-	"courses": {
-		"36": {
-			"total_topics": 69,
-			"read_count": 66,
-			"read_topic_ids": [502, 503, 504]
-		},
-		"33": {
-			"total_topics": 18,
-			"read_count": 2,
-			"read_topic_ids": [381, 382]
-		}
-	}
+  "courses": {
+    "36": {
+      "total_topics": 69,
+      "read_count": 66,
+      "read_topic_ids": [502, 503, 504]
+    },
+    "33": {
+      "total_topics": 18,
+      "read_count": 2,
+      "read_topic_ids": [381, 382]
+    }
+  }
 }
-```
-
-## Usage in Theme Components
-You can now easily add notification dots or progress bars in your Theme Component's Javascript:
-
-```javascript
-fetch('/course-progress.json')
-	.then(response => response.json())
-	.then(data => {
-			const courses = data.courses;
-			if (courses["36"]) {
-					const unreadTotal = courses["36"].total_topics - courses["36"].read_count;
-					if (unreadTotal > 0) {
-							console.log("User still needs to complete this course!");
-							// Draw your UI notification dot here
-					}
-			}
-	});
 ```
