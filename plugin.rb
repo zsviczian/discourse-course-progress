@@ -1,7 +1,7 @@
 # name: discourse-course-progress
-# about: Returns true historical read progress for categories configured with Docs index topics.
+# about: Returns true historical read progress for Doc Categories with configured index topics. Adds `/course-progress.json` for LMS-style course progress tracking. Build your own theme component UI, or install https://github.com/zsviczian/discourse-course-progress-theme for ready-made badges and checkmarks. Builds on the Discourse Doc Categories plugin.
 # version: 0.1
-# authors: Zsolt
+# authors: zsviczian
 
 enabled_site_setting :course_progress_enabled
 
